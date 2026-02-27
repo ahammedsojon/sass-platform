@@ -18,9 +18,10 @@ class DashboardController extends Controller
         $activeTasks = Task::where('status', 'in_progress')->count();
         $completedTasks = Task::where('status', 'completed')->count();
         $projectsCount = Project::count();
-
+        $usersCount = User::count();
         return response()->json([
-           'users_per_role' => $usersPerRole,
+            'total_users' => $usersCount,
+            'users_per_role' => $usersPerRole,
             'active_tasks' => $activeTasks,
             'completed_tasks' => $completedTasks,
             'projects_count' => $projectsCount

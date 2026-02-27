@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\TaskController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -26,4 +28,19 @@ Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
 });
 
-Route::middleware(['auth:sanctum', 'role:Admin'])->get('/dashboard/stats', [DashboardController::class, 'stats']);
+
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/projects', [ProjectController::class, 'index']);
+    Route::get('/projects/{project}', [ProjectController::class, 'show']);
+    Route::middleware('role:Admin,Manager')->post('/projects', [ProjectController::class, 'store']);
+    Route::middleware('role:Admin,Manager')->put('/projects/{project}', [ProjectController::class, 'update']);
+    Route::middleware('role:Admin')->delete('/projects/{project}', [ProjectController::class, 'destroy']);
+
+    Route::get('/tasks', [TaskController::class, 'index']);
+    Route::get('/tasks/{task}', [TaskController::class, 'show']);
+    Route::middleware('role:Admin,Manager')->post('/tasks', [TaskController::class, 'store']);
+    Route::middleware('role:Admin,Manager')->put('/tasks/{task}', [TaskController::class, 'update']);
+    Route::middleware('role:Admin')->delete('/tasks/{task}', [TaskController::class, 'destroy']);
+
+    Route::middleware('role:Admin')->get('/dashboard/stats', [DashboardController::class, 'stats']);
+});
