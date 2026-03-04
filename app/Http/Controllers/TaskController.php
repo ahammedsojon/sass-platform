@@ -11,12 +11,32 @@ class TaskController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        if(auth()->user()->hasRole('User')){
-            return Task::with('project')->where('assigned_to', auth()->id())->latest()->get();
+        $user = $request->user();
+
+        $query = Task::with(['project', 'assignee']);
+        // Role-based visibility
+        if ($user->hasRole('User')) {
+            $query->where('assigned_to', $user->id);
         }
-        return Task::with(['project', 'assignee'])->latest()->get();
+
+        // Search
+        if ($request->filled('search')) {
+            $query->where('title', 'like', '%' . $request->search . '%');
+        }
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by project
+        if ($request->filled('project_id')) {
+            $query->where('project_id', $request->project_id);
+        }
+
+        return $query->latest()->paginate(10);
     }
 
     /**

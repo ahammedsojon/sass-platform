@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProjectController;
@@ -43,5 +44,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::middleware('role:Admin,Manager')->put('/tasks/{task}', [TaskController::class, 'update']);
     Route::middleware('role:Admin')->delete('/tasks/{task}', [TaskController::class, 'destroy']);
 
-    Route::middleware('role:Admin')->get('/dashboard/stats', [DashboardController::class, 'stats']);
+    Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
+
+    Route::get('/activities', [ActivityLogController::class, 'index']);
 });

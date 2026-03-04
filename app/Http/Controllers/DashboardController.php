@@ -15,7 +15,7 @@ class DashboardController extends Controller
             $user = $request->user();
             $query = Task::query();
 
-            if($user->role === 'User'){
+            if ($user->hasRole('User')) {
                 $query->where('assigned_to', $user->id);
             }
 

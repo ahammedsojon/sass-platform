@@ -11,10 +11,14 @@ class ProjectController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $projects = Project::with('creator')->latest()->get();
-        return response()->json($projects);
+        $query = Project::with('creator');
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        return $query->latest()->paginate(10);
     }
 
     /**
