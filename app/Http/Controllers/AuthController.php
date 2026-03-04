@@ -10,6 +10,20 @@ use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
+    public function me(Request $request)
+    {
+        return $request->user()->load('roles');
+    }
+    public function users(Request $request)
+    {
+        $query = User::query();
+        if($request->has('role')){
+            $query->whereHas('roles', function($q) use($request){
+                $q->where('name', $request->role);
+            });
+        }
+        return $query->get();
+    }
     public function register(Request $request)
     {
         try {

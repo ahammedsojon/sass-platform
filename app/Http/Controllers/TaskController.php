@@ -59,7 +59,7 @@ class TaskController extends Controller
      */
     public function update(Request $request, Task $task)
     {
-        $task::update($request->only(['title', 'description', 'status', 'assigned_to']));
+        $task->update($request->only(['title', 'description', 'status', 'assigned_to']));
     }
 
     /**
@@ -67,7 +67,7 @@ class TaskController extends Controller
      */
     public function destroy(Task $task)
     {
-        $task::delete();
+        $task->delete();
         return response()->json(['message' => 'Task Deleted!'], 200);
     }
 }

@@ -9,22 +9,25 @@ use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function stats()
+    public function stats(Request $request)
     {
-        $usersPerRole = User::get()->mapWithKeys(function ($user) {
-            return [$user->name => $user->roles->pluck('name')];
-        });
+        try {
+            $user = $request->user();
+            $query = Task::query();
 
-        $activeTasks = Task::where('status', 'in_progress')->count();
-        $completedTasks = Task::where('status', 'completed')->count();
-        $projectsCount = Project::count();
-        $usersCount = User::count();
-        return response()->json([
-            'total_users' => $usersCount,
-            'users_per_role' => $usersPerRole,
-            'active_tasks' => $activeTasks,
-            'completed_tasks' => $completedTasks,
-            'projects_count' => $projectsCount
-        ]);
+            if($user->role === 'User'){
+                $query->where('assigned_to', $user->id);
+            }
+
+            return response()->json([
+                'total_projects' => Project::count(),
+                'total_tasks' => $query->count(),
+                'pending_tasks' => (clone $query)->where('status', 'pending')->count(),
+                'in_progress_tasks' => (clone $query)->where('status', 'in_progress')->count(),
+                'completed_tasks' => (clone $query)->where('status', 'completed')->count()
+            ]);
+        }catch (\Exception $e){
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }
