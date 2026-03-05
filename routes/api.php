@@ -43,6 +43,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::middleware('role:Admin,Manager')->post('/tasks', [TaskController::class, 'store']);
     Route::middleware('role:Admin,Manager')->put('/tasks/{task}', [TaskController::class, 'update']);
     Route::middleware('role:Admin')->delete('/tasks/{task}', [TaskController::class, 'destroy']);
+    Route::middleware('role:Admin,Manager')->post('/tasks/{task}/attachments', [TaskController::class, 'uploadAttachment']);
+    Route::middleware('role:Admin,Manager')->delete('/attachments/{id}', [TaskController::class, 'deleteAttachment']);
 
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
 

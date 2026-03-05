@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Task;
+use App\Models\TaskAttachment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class TaskController extends Controller
@@ -15,7 +17,7 @@ class TaskController extends Controller
     {
         $user = $request->user();
 
-        $query = Task::with(['project', 'assignee']);
+        $query = Task::with(['project', 'assignee', 'attachments']);
         // Role-based visibility
         if ($user->hasRole('User')) {
             $query->where('assigned_to', $user->id);
@@ -44,7 +46,7 @@ class TaskController extends Controller
      */
     public function store(Request $request)
     {
-        try{
+        try {
             $validator = Validator::make($request->all(), [
                 'title' => 'required|string|max:255',
                 'description' => 'nullable|string',
@@ -53,15 +55,15 @@ class TaskController extends Controller
                 'status' => 'in:pending,in_progress,completed'
             ]);
 
-            if($validator->fails()){
+            if ($validator->fails()) {
                 return response()->json(['errors' => $validator->errors()], 422);
             }
 
             $validated = $validator->validated();
 
-            Task::create($validated);
-            return response()->json(['message' => 'Task Created!'], 201);
-        }catch (\Exception $e){
+            $task = Task::create($validated);
+            return response()->json(['message' => 'Task Created!', 'data' => $task], 201);
+        } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
@@ -71,7 +73,7 @@ class TaskController extends Controller
      */
     public function show(Task $task)
     {
-        return $task->load(['project', 'assignee']);
+        return $task->load(['project', 'assignee', 'attachments']);
     }
 
     /**
@@ -89,5 +91,39 @@ class TaskController extends Controller
     {
         $task->delete();
         return response()->json(['message' => 'Task Deleted!'], 200);
+    }
+
+    public function uploadAttachment(Request $request, $taskId)
+    {
+        $task = Task::findOrFail($taskId);
+        $request->validate([
+            'files' => 'required|array',
+            'files.*' => 'file|mimes:jpg,jpeg,png,pdf,doc,docx|max:10240' // max 10MB
+        ]);
+
+        $uploadedFiles = [];
+        foreach ($request->file('files') as $file) {
+            $path = $file->store('task_attachments', 'public');
+
+            $attachment = TaskAttachment::create([
+                'task_id' => $task->id,
+                'file_name' => $file->getClientOriginalName(),
+                'file_path' => $path,
+                'file_type' => $file->getClientMimeType(),
+                'file_size' => $file->getSize()
+            ]);
+
+            $uploadedFiles[] = $attachment;
+        }
+
+        return response()->json(['message' => 'Attachment Uploaded!', 'attachments' => $uploadedFiles], 201);
+    }
+
+    public function deleteAttachment($id)
+    {
+        $attachment = TaskAttachment::findOrFail($id);
+        Storage::disk('public')->delete($attachment->file_path);
+        $attachment->delete();
+        return response()->json(['message' => 'Attachment Deleted!'], 200);
     }
 }
